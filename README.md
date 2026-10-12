@@ -71,6 +71,7 @@ All checks can run inside the image:
 ```bash
 docker compose build
 docker run --rm --network none solar-forge-signal-lab:dev python -m pytest -p no:cacheprovider /app/tests -q
+docker run --rm --network none solar-forge-signal-lab:dev python /app/scripts/check_ui.py
 docker run --rm --network none -e QT_QPA_PLATFORM=offscreen -e QT_QUICK_BACKEND=software -e SIGNAL_LAB_DATA_DIR=/tmp/signal-test solar-forge-signal-lab:dev python -m solar_forge_signal_lab --smoke-test
 ```
 

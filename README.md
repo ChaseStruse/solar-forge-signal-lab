@@ -13,3 +13,6 @@ your own ambient scenes.
 This repository is initialized; application development takes place on the `Init`
 branch. The first prototype will focus on three sound layers, volume controls,
 and one animated scene.
+
+See [IMPLEMENTATION.md](IMPLEMENTATION.md) for the desktop-first architecture,
+initial feature scope, milestones, and optional Omarchy companion plan.

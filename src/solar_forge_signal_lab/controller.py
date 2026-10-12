@@ -1,4 +1,5 @@
 from copy import deepcopy
+import logging
 from PySide6.QtCore import QObject, Property, Signal, Slot, QTimer
 from .audio.engine import AudioEngine
 from .storage.presets import BUILTINS, PresetStore
@@ -14,7 +15,7 @@ class StudioController(QObject):
         super().__init__(parent)
         self.store = PresetStore(directory)
         self.mix = deepcopy(self.store.last)
-        self.baseline = deepcopy(self.mix)
+        self.baseline = deepcopy(next((p for p in self.all_presets() if p["id"] == self.mix["id"]), self.mix))
         self.message = self.store.error
         self.pending_index = None
         self.engine = engine if engine is not None else AudioEngine(self)
@@ -202,5 +203,5 @@ class StudioController(QObject):
         self.engine.close()
         try:
             self.store.write(self.store.custom, self.mix)
-        except (OSError, ValueError):
-            pass  # Existing files are preserved; errors were surfaced during the session.
+        except (OSError, ValueError) as exc:
+            logging.warning("Could not save last session: %s", exc)

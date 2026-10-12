@@ -30,8 +30,14 @@ def main():
     if not engine.rootObjects():
         return 1
     app.aboutToQuit.connect(controller.close)
+    failures = []
+    if args.audio_test_seconds:
+        controller.engine.failed.connect(failures.append)
     if args.screenshot:
-        QTimer.singleShot(1600, lambda: engine.rootObjects()[0].grabWindow().save(args.screenshot))
+        def capture():
+            if not engine.rootObjects()[0].grabWindow().save(args.screenshot):
+                failures.append("Could not save the requested screenshot.")
+        QTimer.singleShot(1600, capture)
     if args.audio_test_seconds:
         QTimer.singleShot(500, controller.togglePlay)
         QTimer.singleShot(args.audio_test_seconds * 1000, app.quit)
@@ -39,6 +45,12 @@ def main():
         QTimer.singleShot(2500, app.quit)
     result = app.exec()
     if args.audio_test_seconds:
-        logging.info("Audio test finished: underruns=%s", controller.engine.underruns)
+        logging.info("Audio test finished: frames=%s max_peak=%.4f underruns=%s",
+                     controller.engine.frames_rendered, controller.engine.max_peak,
+                     controller.engine.underruns)
+        if controller.engine.frames_rendered == 0:
+            failures.append("No audio frames were rendered.")
+    for failure in failures:
+        logging.error(failure)
     del engine
-    return result
+    return 1 if failures else result

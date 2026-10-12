@@ -5,6 +5,7 @@ import QtQuick.Window
 
 ApplicationWindow {
     id: root
+    objectName: "studioWindow"
     width: 1280; height: 870
     minimumWidth: 860; minimumHeight: 680
     visible: true
@@ -22,6 +23,7 @@ ApplicationWindow {
     Shortcut { sequence: "Ctrl+Space"; onActivated: studio.togglePlay() }
 
     Flickable {
+        objectName: "studioScroll"
         anchors.fill: parent
         contentWidth: width
         contentHeight: Math.max(height, 850)
@@ -55,7 +57,7 @@ ApplicationWindow {
             }
             Item { Layout.fillWidth: true }
             ComboBox {
-                id: presetBox
+                id: presetBox; objectName: "presetPicker"
                 Layout.preferredWidth: 175
                 model: studio.presetNames
                 currentIndex: studio.presetIndex
@@ -75,7 +77,7 @@ ApplicationWindow {
                     background: Rectangle { color: "#142530"; border.color: "#385461"; radius: 5 }
                 }
             }
-            ForgeButton { text: "Save mix"; accent: "#9dd5bd"; onClicked: { saveName.text = studio.custom ? studio.presetName : "My " + studio.presetName; saveCopy.checked = !studio.custom; saveDialog.open() } }
+            ForgeButton { objectName: "saveMixButton"; text: "Save mix"; accent: "#9dd5bd"; onClicked: { saveName.text = studio.custom ? studio.presetName : "My " + studio.presetName; saveCopy.checked = !studio.custom; saveDialog.open() } }
             ForgeButton { text: "Delete"; visible: studio.custom; onClicked: deleteDialog.open() }
         }
         Rectangle {
@@ -129,7 +131,7 @@ ApplicationWindow {
             Layout.fillWidth: true; implicitHeight: 72; radius: 10; color: "#12262c"; border.color: "#29434a"
             RowLayout {
                 anchors.fill: parent; anchors.margins: 16; spacing: 16
-                ForgeButton { text: studio.playing ? "Ⅱ  Pause" : "▶  Play"; primary: true; accent: "#a3d8ba"; implicitWidth: 112; onClicked: studio.togglePlay(); Accessible.name: studio.playing ? "Pause playback" : "Start playback" }
+                ForgeButton { objectName: "transportButton"; text: studio.playing ? "Ⅱ  Pause" : "▶  Play"; primary: true; accent: "#a3d8ba"; implicitWidth: 112; onClicked: studio.togglePlay(); Accessible.name: studio.playing ? "Pause playback" : "Start playback" }
                 ColumnLayout {
                     spacing: 4
                     Text { text: studio.playing ? "TRANSMITTING" : "READY WHEN YOU ARE"; color: "#a5c4bc"; font.pixelSize: 9; font.letterSpacing: 1 }
@@ -169,36 +171,39 @@ ApplicationWindow {
     }
     }
     Dialog {
-        id: switchDialog; anchors.centerIn: parent; modal: true; title: "Keep your changes?"; width: 410
+        id: switchDialog; objectName: "switchDialog"; anchors.centerIn: parent; modal: true; title: "Keep your changes?"; width: 410
         closePolicy: Popup.NoAutoClose
+        header: Text { text: parent.title; color: "#e0eae5"; font.pixelSize: 17; padding: 18 }
         background: Rectangle { color: "#192c37"; border.color: "#45616d"; radius: 10 }
         contentItem: ColumnLayout {
             Text { text: "Save your current mix before changing presets?"; color: "#d4e0e1"; wrapMode: Text.Wrap; Layout.fillWidth: true }
             RowLayout {
                 ForgeButton { text: "Save…"; onClicked: { switchDialog.close(); studio.resolveSwitch("save") } }
                 ForgeButton { text: "Discard"; onClicked: { switchDialog.close(); studio.resolveSwitch("discard") } }
-                ForgeButton { text: "Cancel"; onClicked: { switchDialog.close(); studio.resolveSwitch("cancel") } }
+                ForgeButton { objectName: "cancelSwitchButton"; text: "Cancel"; onClicked: { switchDialog.close(); studio.resolveSwitch("cancel") } }
             }
         }
     }
     Dialog {
-        id: saveDialog; anchors.centerIn: parent; modal: true; title: studio.custom ? "Save or rename your mix" : "Save your mix"; width: 410
+        id: saveDialog; objectName: "saveDialog"; anchors.centerIn: parent; modal: true; title: studio.custom ? "Save or rename your mix" : "Save your mix"; width: 410
         closePolicy: Popup.NoAutoClose
+        header: Text { text: parent.title; color: "#e0eae5"; font.pixelSize: 17; padding: 18 }
         background: Rectangle { color: "#192c37"; border.color: "#45616d"; radius: 10 }
         onOpened: { saveName.forceActiveFocus(); saveName.selectAll() }
         contentItem: ColumnLayout {
             spacing: 12
-            TextField { id: saveName; Layout.fillWidth: true; maximumLength: 80; placeholderText: "Give this atmosphere a name"; color: "#e4eeea"; background: Rectangle { color: "#0d1d27"; radius: 5; border.color: "#678c8b" } Accessible.name: "Preset name" }
+            TextField { id: saveName; objectName: "presetNameField"; Layout.fillWidth: true; maximumLength: 80; placeholderText: "Give this atmosphere a name"; color: "#e4eeea"; background: Rectangle { color: "#0d1d27"; radius: 5; border.color: "#678c8b" } Accessible.name: "Preset name" }
             CheckBox { id: saveCopy; text: "Save as a new preset"; enabled: studio.custom; contentItem: Text { text: parent.text; color: "#b2c6c9"; leftPadding: 30; verticalAlignment: Text.AlignVCenter } }
             Text { text: studio.statusMessage; visible: text.length > 0; color: "#d5bd92"; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pixelSize: 11 }
             RowLayout {
-                ForgeButton { text: "Save"; primary: true; accent: "#a3d8ba"; onClicked: { if (studio.savePreset(saveName.text, saveCopy.checked)) saveDialog.close() } }
+                ForgeButton { objectName: "confirmSaveButton"; text: "Save"; primary: true; accent: "#a3d8ba"; onClicked: { if (studio.savePreset(saveName.text, saveCopy.checked)) saveDialog.close() } }
                 ForgeButton { text: "Cancel"; onClicked: { saveDialog.close(); studio.resolveSwitch("cancel") } }
             }
         }
     }
     Dialog {
         id: deleteDialog; anchors.centerIn: parent; modal: true; title: "Delete this custom preset?"; width: 390
+        header: Text { text: parent.title; color: "#e0eae5"; font.pixelSize: 17; padding: 18 }
         background: Rectangle { color: "#192c37"; border.color: "#45616d"; radius: 10 }
         contentItem: ColumnLayout {
             Text { text: studio.presetName; color: "#d4e0e1" }

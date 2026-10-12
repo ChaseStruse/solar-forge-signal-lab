@@ -22,6 +22,8 @@ class AudioEngine(QObject):
         self.format = None
         self.pending = b""
         self.underruns = 0
+        self.frames_rendered = 0
+        self.max_peak = 0.0
         self.levels, self.muted, self.master = [.65, .25, .12], [False] * 3, .5
         self.devices = QMediaDevices(self)
         self.devices.audioOutputsChanged.connect(self.device_changed)
@@ -123,6 +125,8 @@ class AudioEngine(QObject):
             if not self.pending:
                 frames = min(1024, free // self.format.bytesPerFrame())
                 block = self.mixer.render(frames)
+                self.frames_rendered += frames
+                self.max_peak = max(self.max_peak, self.mixer.peak)
                 if self.format.channelCount() == 1:
                     block = block.mean(axis=1)
                 kind = self.format.sampleFormat()

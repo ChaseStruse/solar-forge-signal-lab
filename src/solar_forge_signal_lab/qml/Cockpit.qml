@@ -9,11 +9,11 @@ Item {
     property real phase: 0
     clip: true
     onReactorChanged: canvas.requestPaint()
-    onRainChanged: canvas.requestPaint()
+    onRainChanged: weather.requestPaint()
     onRadioChanged: canvas.requestPaint()
     Timer {
-        interval: 50; running: scene.animate; repeat: true
-        onTriggered: { scene.phase += .05; canvas.requestPaint() }
+        interval: 80; running: scene.animate; repeat: true
+        onTriggered: { scene.phase += .08; weather.requestPaint() }
     }
     Canvas {
         id: canvas
@@ -46,14 +46,6 @@ Item {
             c.strokeStyle="#476d73"; c.lineWidth=1; c.globalAlpha=.25;
             for(let k=0;k<13;k++) { c.beginPath(); c.ellipse(px,py-pr+k*pr*.18,pr*1.1,pr*.13,-.24,0,Math.PI*2); c.stroke(); }
             c.restore();
-            // Rain streaks on cockpit glass, tied to the rain channel.
-            c.lineWidth=1;
-            for(let j=0;j<Math.floor(scene.rain*90);j++) {
-                let rx=((j*93.73)%1000)/1000*w;
-                let ry=((j*53.1 + scene.phase*85)%600)/600*h;
-                c.strokeStyle="rgba(141,201,211,"+(.08+(j%4)*.035)+")";
-                c.beginPath(); c.moveTo(rx,ry); c.lineTo(rx-5,ry+12+j%17); c.stroke();
-            }
             // Cockpit sill and structural struts.
             c.fillStyle="#09141e";
             c.beginPath(); c.moveTo(0,h); c.lineTo(0,h*.83); c.lineTo(w*.2,h*.92); c.lineTo(w*.8,h*.92); c.lineTo(w,h*.83); c.lineTo(w,h); c.closePath(); c.fill();
@@ -70,6 +62,23 @@ Item {
             for(let k=0;k<8;k++) c.fillRect(w*.08+k*9,h*.94,4,3);
             c.fillStyle="rgba(121,220,199,"+(.2+scene.radio*.7)+")";
             for(let k=0;k<7;k++) c.fillRect(w*.84+k*5,h*.945-(k%3)*2,2,3+k%3*2);
+        }
+    }
+    Canvas {
+        id: weather
+        anchors.fill: parent
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        onPaint: {
+            const c = getContext("2d"); c.reset();
+            c.clearRect(0, 0, width, height);
+            c.lineWidth = 1;
+            for (let j = 0; j < Math.floor(scene.rain * 90); j++) {
+                const rx = ((j * 93.73) % 1000) / 1000 * width;
+                const ry = ((j * 53.1 + scene.phase * 85) % 600) / 600 * height * .82;
+                c.strokeStyle = "rgba(141,201,211," + (.08 + (j % 4) * .035) + ")";
+                c.beginPath(); c.moveTo(rx, ry); c.lineTo(rx - 5, ry + 12 + j % 17); c.stroke();
+            }
         }
     }
     Column {

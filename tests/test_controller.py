@@ -69,3 +69,12 @@ def test_rename_delete_and_duplicate_names(tmp_path):
     assert len(c.store.custom) == 1
     assert c.deletePreset()
     assert not c.store.custom and c.presetIndex == 0
+
+
+def test_restored_unsaved_mix_stays_dirty(tmp_path):
+    c = StudioController(tmp_path, FakeEngine())
+    c.setLevel(0, .99)
+    c.close()
+    restored = StudioController(tmp_path, FakeEngine())
+    assert restored.levels[0] == .99
+    assert restored.dirty and not restored.playing

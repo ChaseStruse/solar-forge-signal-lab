@@ -1,6 +1,21 @@
 # Solar Forge Signal Lab — Implementation Plan
 
-Status: proposed implementation; no application code exists yet.
+Status: standalone first release implemented on `Init` with Docker execution.
+The optional Omarchy companion remains deferred. See `docs/verification.md` for
+completed checks and hardware/listening checks that remain unverified.
+
+Implementation decisions made during the first build:
+- Python 3.15.0 with PySide6 6.12.0 and NumPy 2.5.4, pinned in `requirements.lock`.
+- Docker is the primary launch path at the user's request; no host Python packages
+  are needed. Wayland and PulseAudio-compatible sockets connect it to the desktop.
+- A bounded Qt push-mode buffer with a 10 ms refill timer replaces the proposed
+  producer thread. The initial three-layer mixer is small enough for this approach;
+  retain the audio soak gate before calling it production-hardened.
+- Original periodic procedural audio replaces bundled recordings in this first pass.
+- Static cockpit rendering is separated from animated rain to reduce software-renderer
+  work. Python dependencies use a pinned pip lockfile instead of introducing uv.
+
+The sections below retain the intended design and acceptance criteria.
 Development branch: `Init`.
 
 ## Product direction
@@ -182,7 +197,7 @@ canceling a preset switch preserves the current mix.
 
 Add a desktop entry and icon, documented local install/run/uninstall steps, dependency
 and asset licensing information, and a short usage guide. Select the distribution
-format after a clean-environment installation test; avoid requiring Docker for audio.
+format after a clean-environment installation test; support the requested Docker audio/display forwarding path.
 
 Acceptance: a clean supported environment can launch the app from its desktop menu,
 play bundled assets offline, save a preset, and quit without an orphaned process.

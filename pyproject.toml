@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solar-forge-signal-lab"
+version = "0.1.0"
+description = "An offline spaceship soundscape studio"
+requires-python = ">=3.15,<3.16"
+dependencies = ["PySide6==6.12.0", "numpy>=2.3,<3"]
+
+[project.scripts]
+solar-forge-signal-lab = "solar_forge_signal_lab.app:main"
+
+[tool.setuptools.package-data]
+solar_forge_signal_lab = ["qml/*.qml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -50,3 +50,13 @@ audio failures produce a nonzero exit code. Use `--audio-test-seconds 1800` for 
 longer soak. Do not run the regular studio simultaneously with the audio test.
 
 Python release reference: [Python 3.15.0, released October 9, 2026](https://www.python.org/downloads/release/python-3150/).
+
+## Flight visual update
+
+Replaced the blue space wash with pure black, independently twinkling white stars,
+depth-based outward star motion, and passing planets with three rotating palettes.
+Planet textures and cockpit framing are cached; only positions, star opacity, and
+rain animate. Inspected renders at several travel phases and checked that the
+animation advances and freezes correctly. The existing QML interaction and compact
+layout checks pass. Playback, reduced motion, and window minimization retain their
+existing animation controls.

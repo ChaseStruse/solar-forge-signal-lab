@@ -2,50 +2,97 @@ import QtQuick
 
 Item {
     id: scene
+    objectName: "cockpitScene"
     property bool animate: false
     property real reactor: .65
     property real rain: .25
     property real radio: .12
     property real phase: 0
     clip: true
-    onReactorChanged: canvas.requestPaint()
+    onReactorChanged: frame.requestPaint()
     onRainChanged: weather.requestPaint()
-    onRadioChanged: canvas.requestPaint()
+    onRadioChanged: frame.requestPaint()
     Timer {
-        interval: 80; running: scene.animate; repeat: true
-        onTriggered: { scene.phase += .08; weather.requestPaint() }
+        interval: 40; running: scene.animate; repeat: true
+        onTriggered: { scene.phase += .04; weather.requestPaint() }
+    }
+
+    Rectangle { anchors.fill: parent; color: "#000000" }
+
+    // White points emerge slowly from the flight horizon. Nearby stars move
+    // faster; each has a deterministic, independent twinkle instead of flicker.
+    Repeater {
+        model: 155
+        delegate: Item {
+            required property int index
+            readonly property real seed: ((index * 73.137) % 157) / 157
+            readonly property real depth: (seed + scene.phase * (.008 + (index % 4) * .0015)) % 1
+            readonly property real perspective: .24 + 2.8 * depth * depth
+            readonly property real angle: index * 2.399963
+            readonly property real spread: .25 + ((index * 19.37) % 100) / 135
+            readonly property real shimmer: .62 + .38 * Math.sin(scene.phase * (1.1 + index % 7 * .19) + index * 1.73)
+            x: scene.width * .47 + Math.cos(angle) * scene.width * .52 * spread * perspective
+            y: scene.height * .43 + Math.sin(angle) * scene.height * .66 * spread * perspective
+            opacity: Math.min(1, depth * 12) * Math.min(1, (1 - depth) * 12) * shimmer
+            Rectangle {
+                anchors.centerIn: parent
+                width: .8 + parent.depth * 1.6; height: width; radius: width / 2
+                color: "white"
+            }
+            Rectangle {
+                visible: index % 17 === 0
+                anchors.centerIn: parent
+                width: 8; height: 1; color: "white"; opacity: .4
+            }
+            Rectangle {
+                visible: index % 17 === 0
+                anchors.centerIn: parent
+                width: 1; height: 8; color: "white"; opacity: .4
+            }
+        }
+    }
+
+    // Planet textures are painted once, then moved as scene-graph items.
+    // Wraps and palette changes occur completely beyond the viewport.
+    Repeater {
+        model: 2
+        delegate: Planet {
+            required property int index
+            readonly property real travel: (scene.phase / 85 + index * .5 + .24) % 1
+            variant: (Math.floor(scene.phase / 85 + index * .5 + .24) + index) % 3
+            width: scene.height * (index === 0 ? .94 : .56)
+            height: width
+            x: (1 - travel) * (scene.width + width * 2.8) - width * 1.7
+            y: scene.height * (index === 0 ? .2 : .06) - height * .12
+            scale: .72 + travel * .45
+        }
+    }
+
+    Canvas {
+        id: weather
+        anchors.fill: parent
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        onPaint: {
+            const c = getContext("2d"); c.reset();
+            c.clearRect(0, 0, width, height);
+            c.lineWidth = 1;
+            for (let j = 0; j < Math.floor(scene.rain * 90); j++) {
+                const rx = ((j * 93.73) % 1000) / 1000 * width;
+                const ry = ((j * 53.1 + scene.phase * 85) % 600) / 600 * height * .82;
+                c.strokeStyle = "rgba(141,201,211," + (.08 + (j % 4) * .035) + ")";
+                c.beginPath(); c.moveTo(rx, ry); c.lineTo(rx - 5, ry + 12 + j % 17); c.stroke();
+            }
+        }
     }
     Canvas {
-        id: canvas
+        id: frame
         anchors.fill: parent
         onWidthChanged: requestPaint()
         onHeightChanged: requestPaint()
         onPaint: {
             const c = getContext("2d"); const w = width; const h = height;
-            c.reset();
-            let bg = c.createLinearGradient(0, 0, w, h);
-            bg.addColorStop(0, "#040d1d"); bg.addColorStop(.55, "#102b3e"); bg.addColorStop(1, "#071320");
-            c.fillStyle = bg; c.fillRect(0,0,w,h);
-            // Deterministic stars: no random flicker between frames.
-            for (let i=0;i<150;i++) {
-                let x = ((i*137.507 + scene.phase*(i%3+.3)) % 1000)/1000*w;
-                let y = ((i*71.17)%600)/600*h;
-                c.fillStyle = i%8===0 ? "#b5d9e2" : "#597a93";
-                const r = i%8===0 ? 1.5 : .7;
-                c.fillRect(x,y,r,r);
-            }
-            // A softly lit world beyond the glass.
-            const px=w*.70, py=h*.79, pr=h*.58;
-            let halo=c.createRadialGradient(px,py,pr*.85,px,py,pr*1.16);
-            halo.addColorStop(0,"#487d8b"); halo.addColorStop(.78,"#173e52"); halo.addColorStop(1,"#10283b");
-            c.fillStyle=halo; c.beginPath(); c.arc(px,py,pr*1.16,0,Math.PI*2); c.fill();
-            let planet=c.createLinearGradient(px-pr,py-pr,px+pr,py+pr);
-            planet.addColorStop(0,"#53818a"); planet.addColorStop(.25,"#224854"); planet.addColorStop(.7,"#102736"); planet.addColorStop(1,"#071320");
-            c.fillStyle=planet; c.beginPath(); c.arc(px,py,pr,0,Math.PI*2); c.fill();
-            c.save(); c.beginPath(); c.arc(px,py,pr,0,Math.PI*2); c.clip();
-            c.strokeStyle="#476d73"; c.lineWidth=1; c.globalAlpha=.25;
-            for(let k=0;k<13;k++) { c.beginPath(); c.ellipse(px,py-pr+k*pr*.18,pr*1.1,pr*.13,-.24,0,Math.PI*2); c.stroke(); }
-            c.restore();
+            c.reset(); c.clearRect(0, 0, w, h);
             // Cockpit sill and structural struts.
             c.fillStyle="#09141e";
             c.beginPath(); c.moveTo(0,h); c.lineTo(0,h*.83); c.lineTo(w*.2,h*.92); c.lineTo(w*.8,h*.92); c.lineTo(w,h*.83); c.lineTo(w,h); c.closePath(); c.fill();
@@ -64,23 +111,6 @@ Item {
             for(let k=0;k<7;k++) c.fillRect(w*.84+k*5,h*.945-(k%3)*2,2,3+k%3*2);
         }
     }
-    Canvas {
-        id: weather
-        anchors.fill: parent
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-        onPaint: {
-            const c = getContext("2d"); c.reset();
-            c.clearRect(0, 0, width, height);
-            c.lineWidth = 1;
-            for (let j = 0; j < Math.floor(scene.rain * 90); j++) {
-                const rx = ((j * 93.73) % 1000) / 1000 * width;
-                const ry = ((j * 53.1 + scene.phase * 85) % 600) / 600 * height * .82;
-                c.strokeStyle = "rgba(141,201,211," + (.08 + (j % 4) * .035) + ")";
-                c.beginPath(); c.moveTo(rx, ry); c.lineTo(rx - 5, ry + 12 + j % 17); c.stroke();
-            }
-        }
-    }
     Column {
         x: 28; y: 24; spacing: 7
         Text { text: "EXTERIOR / OBSERVATION DECK"; color: "#87adb9"; font.pixelSize: 10; font.letterSpacing: 2 }
@@ -90,12 +120,12 @@ Item {
         anchors.right: parent.right; anchors.rightMargin: 26
         anchors.top: parent.top; anchors.topMargin: 24; spacing: 8
         Rectangle { width: 5; height: 5; radius: 3; color: "#90d5c3"; anchors.verticalCenter: parent.verticalCenter }
-        Text { text: "KEPLER SECTOR  /  07"; color: "#85a8b5"; font.pixelSize: 10; font.letterSpacing: 1 }
+        Text { text: "DEEP SPACE  /  CRUISE"; color: "#85a8b5"; font.pixelSize: 10; font.letterSpacing: 1 }
     }
     Column {
         anchors.left: parent.left; anchors.leftMargin: 28
         anchors.bottom: parent.bottom; anchors.bottomMargin: 45; spacing: 5
-        Text { text: "NO DESTINATION REQUIRED"; color: "#88a6b3"; font.pixelSize: 9; font.letterSpacing: 2 }
+        Text { text: "DRIFTING BETWEEN WORLDS"; color: "#88a6b3"; font.pixelSize: 9; font.letterSpacing: 2 }
         Text { text: "Just stay a while."; color: "#d5e3e5"; font.pixelSize: 24; font.weight: Font.Light }
     }
 }

@@ -1,7 +1,8 @@
 # Solar Forge Signal Lab
 
 A native, offline spaceship soundscape studio. Mix a warm reactor hum, cockpit
-rain, and distant radio static while looking out over a quiet alien world.
+rain, and distant radio static while cruising past softly lit planets. White stars
+twinkle and stream outward through a truly black void, with depth-based motion.
 
 Built with **Python 3.15.0**, PySide6/Qt Quick 6.12, and NumPy. Development is on
 `Init`. The standalone app is the first release; the optional Omarchy bar companion
@@ -54,6 +55,7 @@ and `docker compose down` preserve it. **Do not use `down -v` unless you intend 
 remove the stored presets.** Invalid or future-version files are preserved and
 saving is disabled until the file is moved aside or repaired.
 
+During playback, planets pass the window and stars drift and twinkle.
 Reduced motion stops cockpit animation; minimizing the app also stops animation
 while sound continues. Short windows scroll vertically so controls remain reachable.
 

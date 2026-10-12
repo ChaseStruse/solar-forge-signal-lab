@@ -27,7 +27,7 @@ Item {
             required property int index
             readonly property real seed: ((index * 73.137) % 157) / 157
             readonly property real depth: (seed + scene.phase * (.008 + (index % 4) * .0015)) % 1
-            readonly property real perspective: .24 + 2.8 * depth * depth
+            readonly property real perspective: .12 / (1 - depth * .985)
             readonly property real angle: index * 2.399963
             readonly property real spread: .25 + ((index * 19.37) % 100) / 135
             readonly property real shimmer: .62 + .38 * Math.sin(scene.phase * (1.1 + index % 7 * .19) + index * 1.73)
@@ -52,19 +52,30 @@ Item {
         }
     }
 
-    // Planet textures are painted once, then moved as scene-graph items.
-    // Wraps and palette changes occur completely beyond the viewport.
-    Repeater {
-        model: 2
-        delegate: Planet {
-            required property int index
-            readonly property real travel: (scene.phase / 85 + index * .5 + .24) % 1
-            variant: (Math.floor(scene.phase / 85 + index * .5 + .24) + index) % 3
-            width: scene.height * (index === 0 ? .94 : .56)
-            height: width
-            x: (1 - travel) * (scene.width + width * 2.8) - width * 1.7
-            y: scene.height * (index === 0 ? .2 : .06) - height * .12
-            scale: .72 + travel * .45
+    // Perspective projection along the ship's forward axis. A fixed sideways
+    // world offset expands with 1 / distance, so size and position accelerate
+    // together as we approach and pass a planet. Textures remain cached.
+    Item {
+        anchors.fill: parent
+        Repeater {
+            model: 2
+            delegate: Planet {
+                required property int index
+                readonly property real journey: scene.phase / 52 + index * .5 + .36
+                readonly property real travel: journey % 1
+                readonly property real projection: .22 / (1 - travel * .99)
+                readonly property real side: index === 0 ? 1 : -1
+                variant: (Math.floor(journey) + index) % 3
+                width: scene.height * .9
+                height: width
+                x: scene.width * .47 + side * scene.width * .25 * projection - width / 2
+                y: scene.height * .43 + (index === 0 ? .20 : -.30) * scene.height * projection - height / 2
+                scale: projection
+                z: projection
+                // Fade new distant worlds in; near worlds exit beyond the glass
+                // before resetting, rather than sliding back across the view.
+                opacity: Math.min(1, travel * 12)
+            }
         }
     }
 

@@ -55,7 +55,8 @@ and `docker compose down` preserve it. **Do not use `down -v` unless you intend 
 remove the stored presets.** Invalid or future-version files are preserved and
 saving is disabled until the file is moved aside or repaired.
 
-During playback, planets pass the window and stars drift and twinkle.
+During playback, planets grow from the distance and pass the ship as stars stream
+outward and twinkle, creating forward flight.
 Reduced motion stops cockpit animation; minimizing the app also stops animation
 while sound continues. Short windows scroll vertically so controls remain reachable.
 

@@ -60,3 +60,16 @@ rain animate. Inspected renders at several travel phases and checked that the
 animation advances and freezes correctly. The existing QML interaction and compact
 layout checks pass. Playback, reduced motion, and window minimization retain their
 existing animation controls.
+
+## Space Jazz update — 2026-10-13
+
+Added the fourth layer, Midnight Drift preset, and version-1 library migration
+with an original-file backup. Docker renders and packages the 50.5-second original
+jazz loop. All 24 unit tests pass, including four-layer headroom, jazz mute,
+resampling, and preset migration. Offscreen interaction and launch smoke checks pass.
+
+The first offscreen run crashed in Qt Multimedia after PipeWire configuration
+errors. Selecting `QT_AUDIO_BACKEND=pulseaudio` resolved this in the checks; the
+Docker image now sets it explicitly to match the mounted PulseAudio socket.
+The exact upstream crash mechanism has not been established. Listening quality
+and a full playback soak of the new arrangement remain manual checks.

@@ -6,3 +6,4 @@ __pycache__/
 build/
 dist/
 .env
+src/solar_forge_signal_lab/assets/audio/*.wav

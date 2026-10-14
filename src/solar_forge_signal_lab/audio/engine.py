@@ -4,7 +4,8 @@ import time
 import numpy as np
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtMultimedia import QAudio, QAudioFormat, QAudioSink, QMediaDevices
-from .mixer import Mixer, make_loops
+from .mixer import Mixer, make_loops, LAYER_GAINS
+from .music import load_jazz
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class AudioEngine(QObject):
         self.underruns = 0
         self.frames_rendered = 0
         self.max_peak = 0.0
-        self.levels, self.muted, self.master = [.65, .25, .12], [False] * 3, .5
+        self.levels, self.muted, self.master = [.65, .25, .12, 0], [False] * 4, .5
         self.devices = QMediaDevices(self)
         self.devices.audioOutputsChanged.connect(self.device_changed)
         self.timer = QTimer(self)
@@ -46,7 +47,7 @@ class AudioEngine(QObject):
             QAudioFormat.SampleFormat.Float, QAudioFormat.SampleFormat.Int16, QAudioFormat.SampleFormat.Int32):
             raise RuntimeError("This output format is unsupported. Choose a stereo output and retry.")
         if self.mixer is None or self.mixer.rate != fmt.sampleRate():
-            self.mixer = Mixer(make_loops(fmt.sampleRate()), fmt.sampleRate())
+            self.mixer = Mixer(make_loops(fmt.sampleRate()) + [load_jazz(fmt.sampleRate())], fmt.sampleRate(), LAYER_GAINS)
         self.format = fmt
         self.sink = QAudioSink(device, fmt, self)
         self.sink.setBufferSize(fmt.bytesForDuration(120000))

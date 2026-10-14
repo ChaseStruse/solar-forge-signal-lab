@@ -1,7 +1,8 @@
 """Deterministic loop synthesis and bounded block mixing, independent of Qt."""
 import numpy as np
 
-LAYER_IDS = ("reactor", "rain", "radio")
+LAYER_IDS = ("reactor", "rain", "radio", "jazz")
+LAYER_GAINS = (.18, .18, .18, .40)
 
 
 def make_loops(rate=48000, seconds=12):
@@ -29,8 +30,11 @@ def make_loops(rate=48000, seconds=12):
 
 
 class Mixer:
-    def __init__(self, loops, rate=48000):
+    def __init__(self, loops, rate=48000, gains=None):
         self.loops = loops
+        self.gains = np.asarray(gains if gains is not None else [.28] * len(loops), dtype=np.float32)
+        if len(self.gains) != len(loops) or np.sum(self.gains) > .95:
+            raise ValueError("Layer gains must match the loops and reserve output headroom.")
         self.rate = rate
         self.positions = [0] * len(loops)
         self.targets = np.zeros(len(loops), dtype=np.float32)
@@ -40,9 +44,9 @@ class Mixer:
         self.rms = 0.0
 
     def set_mix(self, levels, muted, master):
-        # Each normalized layer contributes at most 0.28: three layers <= 0.84.
-        self.targets = np.array([min(1, max(0, v)) * (not m) * min(1, max(0, master)) * .28
-                                 for v, m in zip(levels, muted)], dtype=np.float32)
+        # Production gains reserve headroom: ambience .54 + music .40 <= .94.
+        self.targets = np.array([min(1, max(0, v)) * (not m) * min(1, max(0, master)) * gain
+                                 for v, m, gain in zip(levels, muted, self.gains)], dtype=np.float32)
 
     def fade_in(self):
         self.current[:] = 0

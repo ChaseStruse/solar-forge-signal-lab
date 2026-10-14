@@ -13,7 +13,7 @@ dependencies = ["PySide6==6.12.0", "numpy==2.5.4"]
 solar-forge-signal-lab = "solar_forge_signal_lab.app:main"
 
 [tool.setuptools.package-data]
-solar_forge_signal_lab = ["qml/*.qml"]
+solar_forge_signal_lab = ["qml/*.qml", "assets/audio/*.wav"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

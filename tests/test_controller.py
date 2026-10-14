@@ -42,9 +42,9 @@ def test_save_switch_destination_survives_reorder(tmp_path):
     c = StudioController(tmp_path, FakeEngine())
     assert c.savePreset('A', True)
     assert c.savePreset('B', True)
-    c.requestPreset(3)
-    c.setLevel(0, .88)
     c.requestPreset(4)
+    c.setLevel(0, .88)
+    c.requestPreset(5)
     assert c.savePreset('A renamed', False)
     assert c.presetName == 'B'
     assert next(p for p in c.store.custom if p['name'] == 'A renamed')['levels'][0] == .88

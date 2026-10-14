@@ -12,6 +12,7 @@ ApplicationWindow {
     title: "Solar Forge · Signal Lab"
     color: "#09131c"
     font.family: "DejaVu Sans"
+    property int contentMinimumHeight: width < 1100 ? 1020 : 850
     property bool motion: visibility !== Window.Minimized && studio.playing && !studio.reduced
 
     Connections {
@@ -26,11 +27,11 @@ ApplicationWindow {
         objectName: "studioScroll"
         anchors.fill: parent
         contentWidth: width
-        contentHeight: Math.max(height, 850)
+        contentHeight: Math.max(height, root.contentMinimumHeight)
         clip: true
         ScrollBar.vertical: ScrollBar {}
     ColumnLayout {
-        x: 26; y: 26; width: parent.width - 52; height: Math.max(root.height, 850) - 52; spacing: 18
+        x: 26; y: 26; width: parent.width - 52; height: Math.max(root.height, root.contentMinimumHeight) - 52; spacing: 18
         RowLayout {
             Layout.fillWidth: true; spacing: 14
             Rectangle {
@@ -95,14 +96,15 @@ ApplicationWindow {
             Layout.fillWidth: true
             Text { text: "BUILD YOUR ATMOSPHERE"; color: "#89a0a8"; font.pixelSize: 10; font.letterSpacing: 2 }
             Item { Layout.fillWidth: true }
-            Text { text: "Three layers. Endless places."; color: "#64808d"; font.pixelSize: 11 }
+            Text { text: "A little jazz. A long way from home."; color: "#64808d"; font.pixelSize: 11 }
         }
-        RowLayout {
-            Layout.fillWidth: true; spacing: 12
+        GridLayout {
+            Layout.fillWidth: true; columns: root.width < 1100 ? 2 : 4; columnSpacing: 12; rowSpacing: 12
             Repeater {
                 model: [ {name: "Reactor", tag: "01 / ENGINE ROOM", detail: "A warm mechanical heartbeat", accent: "#e5b77c", glyph: "◎"},
                          {name: "Cockpit Rain", tag: "02 / OUTSIDE THE GLASS", detail: "Soft weather, distant worlds", accent: "#7cc7db", glyph: "⋮"},
-                         {name: "Radio Static", tag: "03 / DEEP SPACE COMMS", detail: "A whisper from the unknown", accent: "#b8a3dc", glyph: "≋"} ]
+                         {name: "Radio Static", tag: "03 / DEEP SPACE COMMS", detail: "A whisper from the unknown", accent: "#b8a3dc", glyph: "≋"},
+                         {name: "Space Jazz", tag: "04 / MIDNIGHT DRIFT", detail: "Upright bass, warm keys, soft sax", accent: "#d8b591", glyph: "♫"} ]
                 delegate: Rectangle {
                     required property var modelData
                     required property int index

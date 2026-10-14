@@ -88,14 +88,14 @@ class StudioController(QObject):
 
     @Slot(int, float)
     def setLevel(self, index, value):
-        if 0 <= index < 3:
+        if 0 <= index < len(self.mix["levels"]):
             self.mix["levels"][index] = min(1, max(0, value))
             self.sync_audio()
             self.changed.emit()
 
     @Slot(int)
     def toggleMute(self, index):
-        if 0 <= index < 3:
+        if 0 <= index < len(self.mix["levels"]):
             self.mix["muted"][index] = not self.mix["muted"][index]
             self.sync_audio()
             self.changed.emit()

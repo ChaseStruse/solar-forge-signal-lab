@@ -1,7 +1,7 @@
 # Solar Forge Signal Lab
 
 A native, offline spaceship soundscape studio. Mix a warm reactor hum, cockpit
-rain, and distant radio static while cruising past softly lit planets. White stars
+rain, distant radio static, and mellow space jazz while cruising past softly lit planets. White stars
 twinkle and stream outward through a truly black void, with depth-based motion.
 
 Built with **Python 3.15.0**, PySide6/Qt Quick 6.12, and NumPy. Development is on
@@ -43,12 +43,13 @@ an audio permission sandbox.
 
 ## Mixes and preferences
 
-Choose Deep Space, Orbital Rain, or Quiet Watch, then make it your own. **Save mix**
+Choose Deep Space, Orbital Rain, Quiet Watch, or the jazz-led Midnight Drift, then make it your own. **Save mix**
 (or **Ctrl+S**) saves a named custom preset. The save dialog can rename/update a
 custom preset or save a new copy. Built-ins cannot be deleted or overwritten.
 Changing presets with edits asks whether to save, discard, or cancel.
 
-Levels, mute states, master volume, and reduced motion persist locally. The last
+Levels, mute states, master volume, and reduced motion persist locally. Older three-layer
+libraries migrate with jazz at zero volume; the original is kept in `presets.v1.backup.json`. The last
 session is restored silently on launch. The named Docker volume
 `solar-forge-signal-lab-data` holds `/data/presets.json`; ordinary container rebuilds
 and `docker compose down` preserve it. **Do not use `down -v` unless you intend to
@@ -79,16 +80,18 @@ docker run --rm --network none -e QT_QPA_PLATFORM=offscreen -e QT_QUICK_BACKEND=
 ```
 
 For local development with an existing Python 3.15 environment, install
-`requirements.lock` and the project (`pip install --no-deps -e .`), then run
+`requirements.lock`, install FluidSynth and the TimGM6mb SoundFont, render the music
+with `python scripts/render_jazz.py`, and install the project (`pip install --no-deps -e .`), then run
 `python -m solar_forge_signal_lab`. Docker is the recommended route on this machine.
 The lockfile pins the tested Python dependencies; Debian security packages can
 advance on a fresh build. Qt packages include upstream components the app does not
 use, including WebEngine; the interface itself is native QML, with no webview.
 
 Audio uses a single QAudioSink with a 120 ms requested output buffer and 10 ms
-refill timer. Its three original, periodically generated loops are normalized, and
-each contributes at most 0.28 to the mix. Loop generation occurs before playback;
-no file reads or decoding occur during output. The UI reports output failures and
+refill timer. Its three procedural ambience loops each contribute at most 0.18, and the bundled
+jazz loop contributes at most 0.40, reserving output headroom. The original 16-bar,
+76 BPM jazz arrangement is rendered during the Docker build with FluidSynth and
+TimGM6mb. Loops are loaded before playback; no file reads or decoding occur during output. The UI reports output failures and
 pauses after device changes or long session delays. See [asset notes](docs/assets.md).
 
 ## Troubleshooting

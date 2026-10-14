@@ -8,7 +8,7 @@ from solar_forge_signal_lab.storage.presets import BUILTINS, PresetStore, valida
 def test_round_trip(tmp_path):
     store = PresetStore(tmp_path)
     preset = deepcopy(BUILTINS[1])
-    preset.update(id="custom", name="My rain", muted=[True, False, True], reduced=True)
+    preset.update(id="custom", name="My rain", muted=[True, False, True, False], reduced=True)
     store.write([preset], preset)
     loaded = PresetStore(tmp_path)
     assert loaded.custom == [preset]
@@ -44,3 +44,21 @@ def test_atomic_failure_keeps_old_file(tmp_path):
     assert store.path.read_bytes() == original
     assert store.last == BUILTINS[0]
     assert not list(tmp_path.glob('.presets-*'))
+
+
+def test_legacy_three_layer_presets_upgrade_with_backup(tmp_path):
+    old = deepcopy(BUILTINS[0])
+    old['levels'] = old['levels'][:3]
+    old['muted'] = old['muted'][:3]
+    document = dict(version=1, layers=['reactor', 'rain', 'radio'], presets=[], last=old)
+    path = tmp_path / 'presets.json'
+    original = json.dumps(document)
+    path.write_text(original)
+    store = PresetStore(tmp_path)
+    assert not store.read_only
+    assert store.last['levels'] == [*old['levels'], 0]
+    assert (tmp_path / 'presets.v1.backup.json').read_text() == original
+    assert path.read_text() == original
+    store.write(store.custom, store.last)
+    assert json.loads(path.read_text())['version'] == 2
+    assert PresetStore(tmp_path).last == store.last

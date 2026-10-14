@@ -1,0 +1,31 @@
+services:
+  studio:
+    build:
+      context: .
+      args:
+        APP_UID: ${SIGNAL_LAB_UID:-1000}
+        APP_GID: ${SIGNAL_LAB_GID:-1000}
+    image: solar-forge-signal-lab:dev
+    init: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      QT_QPA_PLATFORM: wayland
+      QT_QUICK_BACKEND: software
+      WAYLAND_DISPLAY: wayland-0
+      PULSE_SERVER: unix:/tmp/pulse-native
+      QT_MEDIA_BACKEND: ffmpeg
+    volumes:
+      - type: bind
+        source: ${XDG_RUNTIME_DIR:?A Wayland session is required}/${WAYLAND_DISPLAY:?A Wayland session is required}
+        target: /tmp/runtime-signal/wayland-0
+        read_only: true
+      - type: bind
+        source: ${XDG_RUNTIME_DIR}/pulse/native
+        target: /tmp/pulse-native
+        read_only: true
+      - signal-data:/data
+volumes:
+  signal-data:
+    name: solar-forge-signal-lab-data

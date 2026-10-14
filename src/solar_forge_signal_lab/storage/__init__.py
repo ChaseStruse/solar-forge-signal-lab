@@ -1,0 +1,1 @@
+"""Local preset storage."""

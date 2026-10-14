@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Solar Forge Signal Lab
+Comment=Find your quiet with a spaceship soundscape
+Exec=@PROJECT_DIR@/scripts/run.sh
+Icon=@PROJECT_DIR@/packaging/signal-lab.svg
+Terminal=false
+Categories=AudioVideo;Audio;
+StartupWMClass=solar-forge-signal-lab

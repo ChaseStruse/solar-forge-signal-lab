@@ -1,5 +1,5 @@
 FROM python:3.15.0-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 QT_AUDIO_BACKEND=pulseaudio
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libegl1 libgl1 libopengl0 libglib2.0-0 libdbus-1-3 libxkbcommon0 \
     libgssapi-krb5-2 libfontconfig1 libfreetype6 libwayland-client0 libwayland-cursor0 \

@@ -10,6 +10,21 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickItem, QQuickWindow
 from PySide6.QtTest import QTest
 from solar_forge_signal_lab.controller import StudioController
+from PySide6.QtCore import QObject, Signal
+
+class SilentEngine(QObject):
+    changed = Signal()
+    failed = Signal(str)
+    playing = False
+    mixer = None
+    def update_mix(self, *args): pass
+    def play(self):
+        self.playing = True
+        self.changed.emit()
+    def pause(self):
+        self.playing = False
+        self.changed.emit()
+    def close(self): self.pause()
 import solar_forge_signal_lab
 
 app = QGuiApplication([])
@@ -19,7 +34,7 @@ def messages(kind, context, message):
         errors.append(message)
 qInstallMessageHandler(messages)
 with tempfile.TemporaryDirectory() as directory:
-    controller = StudioController(directory)
+    controller = StudioController(directory, SilentEngine())
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty('studio', controller)
     engine.load(QUrl.fromLocalFile(str(Path(solar_forge_signal_lab.__file__).parent / 'qml/Main.qml')))
@@ -27,7 +42,17 @@ with tempfile.TemporaryDirectory() as directory:
     window = engine.rootObjects()[0]
     QTest.qWait(300)
     def item(name):
+        def find_visual(parent):
+            if parent.objectName() == name:
+                return parent
+            for child in parent.childItems():
+                found = find_visual(child)
+                if found is not None:
+                    return found
+            return None
         found = window.findChild(QQuickItem, name)
+        if found is None:
+            found = find_visual(window.contentItem())
         assert found is not None, name
         return found
     def click(name):
@@ -56,9 +81,15 @@ with tempfile.TemporaryDirectory() as directory:
     transport = item('transportButton')
     position = transport.mapToScene(QPointF(0, 0))
     assert 0 <= position.y() < window.height() - transport.height()
+    click('transportButton')
+    click('sleep15Button')
+    assert controller.sleepActive and 899 <= controller.sleepRemaining <= 900
+    assert 'Pausing in' in item('sleepCountdown').property('text')
+    click('cancelSleepButton')
+    assert not controller.sleepActive and controller.playing
     window.grabWindow().save('/tmp/signal-lab-small.png')
     controller.close()
     window.close()
     del engine
 assert not errors, errors
-print('UI checks passed: save dialog, custom preset, cancel switch, compact scrolling; no QML errors.')
+print('UI checks passed: save dialog, custom preset, cancel switch, compact scrolling, sleep timer start/cancel; no QML errors.')

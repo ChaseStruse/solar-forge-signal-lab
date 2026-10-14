@@ -1,5 +1,7 @@
 from copy import deepcopy
 import logging
+import math
+import time
 from PySide6.QtCore import QObject, Property, Signal, Slot, QTimer
 from .audio.engine import AudioEngine
 from .storage.presets import BUILTINS, PresetStore
@@ -8,6 +10,7 @@ from .storage.presets import BUILTINS, PresetStore
 class StudioController(QObject):
     changed = Signal()
     meterChanged = Signal()
+    sleepChanged = Signal()
     confirmSwitch = Signal()
     saveRequested = Signal()
 
@@ -19,6 +22,12 @@ class StudioController(QObject):
         self.message = self.store.error
         self.pending_index = None
         self.engine = engine if engine is not None else AudioEngine(self)
+        self.sleep_deadline = None
+        self.sleep_gain = 1.0
+        self.sleep_timer = QTimer(self)
+        self.sleep_timer.setInterval(100)
+        self.sleep_timer.timeout.connect(self.tick_sleep)
+        self.engine.changed.connect(self.on_playback_changed)
         self.engine.changed.connect(self.changed)
         self.engine.failed.connect(self.set_message)
         self.sync_audio()
@@ -31,7 +40,50 @@ class StudioController(QObject):
         return BUILTINS + self.store.custom
 
     def sync_audio(self):
-        self.engine.update_mix(self.mix["levels"], self.mix["muted"], self.mix["master"])
+        self.engine.update_mix(self.mix["levels"], self.mix["muted"], self.mix["master"] * self.sleep_gain)
+
+    @Property(int, notify=sleepChanged)
+    def sleepRemaining(self):
+        return max(0, math.ceil(self.sleep_deadline - time.monotonic())) if self.sleep_deadline is not None else 0
+
+    @Property(bool, notify=sleepChanged)
+    def sleepActive(self):
+        return self.sleep_deadline is not None
+
+    @Slot(int)
+    def startSleep(self, minutes):
+        if not self.playing or minutes not in (15, 30, 60):
+            return
+        self.sleep_deadline = time.monotonic() + minutes * 60
+        self.sleep_gain = 1.0
+        self.sync_audio()
+        self.sleep_timer.start()
+        self.sleepChanged.emit()
+
+    @Slot()
+    def cancelSleep(self):
+        self.sleep_timer.stop()
+        self.sleep_deadline = None
+        self.sleep_gain = 1.0
+        self.sync_audio()
+        self.sleepChanged.emit()
+
+    def on_playback_changed(self):
+        if not self.playing and self.sleepActive:
+            self.cancelSleep()
+
+    def tick_sleep(self):
+        if self.sleep_deadline is None:
+            return
+        remaining = self.sleep_deadline - time.monotonic()
+        if remaining <= 0:
+            self.engine.pause()
+            self.set_message("Sleep timer finished. Rest easy.")
+            return
+        # Mixer gain ramps smooth these updates without changing the saved mix.
+        self.sleep_gain = min(1.0, remaining / 30)
+        self.sync_audio()
+        self.sleepChanged.emit()
 
     @Property('QVariantList', notify=changed)
     def levels(self):
@@ -200,6 +252,8 @@ class StudioController(QObject):
         self.changed.emit()
 
     def close(self):
+        self.sleep_timer.stop()
+        self.meter_timer.stop()
         self.engine.close()
         try:
             self.store.write(self.store.custom, self.mix)

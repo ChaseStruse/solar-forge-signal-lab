@@ -78,3 +78,50 @@ def test_restored_unsaved_mix_stays_dirty(tmp_path):
     restored = StudioController(tmp_path, FakeEngine())
     assert restored.levels[0] == .99
     assert restored.dirty and not restored.playing
+
+
+def test_sleep_fades_pauses_and_preserves_saved_mix(tmp_path, monkeypatch):
+    now = [100.0]
+    monkeypatch.setattr('solar_forge_signal_lab.controller.time.monotonic', lambda: now[0])
+    c = StudioController(tmp_path, FakeEngine())
+    c.togglePlay()
+    original = deepcopy(c.mix)
+    c.startSleep(15)
+    assert c.sleepRemaining == 900
+    now[0] += 885
+    c.tick_sleep()
+    assert c.engine.state[2] == original['master'] / 2
+    assert c.mix == original and not c.dirty
+    # Changing volume during the fade still respects the remaining fade gain.
+    c.setMaster(.8)
+    assert c.engine.state[2] == .4
+    now[0] += 16
+    c.tick_sleep()
+    assert not c.playing and not c.sleepActive
+    assert not c.sleep_timer.isActive()
+    c.togglePlay()
+    assert c.engine.state[2] == .8
+    c.close()
+    restored = StudioController(tmp_path, FakeEngine())
+    assert restored.master == .8 and not restored.sleepActive
+    restored.close()
+
+
+def test_sleep_cancel_restart_and_interrupted_playback(tmp_path, monkeypatch):
+    now = [100.0]
+    monkeypatch.setattr('solar_forge_signal_lab.controller.time.monotonic', lambda: now[0])
+    c = StudioController(tmp_path, FakeEngine())
+    c.startSleep(15)
+    assert not c.sleepActive  # Setting a timer never starts audio.
+    c.togglePlay()
+    c.startSleep(15)
+    now[0] += 885
+    c.tick_sleep()
+    c.startSleep(30)
+    assert c.sleepRemaining == 1800 and c.engine.state[2] == c.master
+    c.cancelSleep()
+    assert c.playing and not c.sleepActive
+    c.startSleep(60)
+    c.engine.pause()  # Also covers engine-driven stops, such as device loss.
+    assert not c.sleepActive and c.engine.state[2] == c.master
+    c.close()

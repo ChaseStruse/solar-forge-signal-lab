@@ -73,3 +73,15 @@ errors. Selecting `QT_AUDIO_BACKEND=pulseaudio` resolved this in the checks; the
 Docker image now sets it explicitly to match the mounted PulseAudio socket.
 The exact upstream crash mechanism has not been established. Listening quality
 and a full playback soak of the new arrangement remain manual checks.
+
+## Sleep timer — 2026-10-13
+
+Added 15/30/60-minute timers with a countdown, cancellation, and a 30-second fade
+before pausing. Timer gain is separate from saved volume. Manual pause and
+engine-driven stops cancel the timer; restarting the app restores no timer.
+All 26 tests pass, including simulated expiry, fade gain, volume changes during
+fade, restart/cancel, interrupted playback, and saved-volume restoration.
+Offscreen UI checks use a silent engine to exercise timer buttons without playing
+sound. Start/cancel and compact scrolling pass; the 860×680 layout was visually
+inspected. The separate real-engine launch smoke check also passes. A full-duration
+listening test remains manual.

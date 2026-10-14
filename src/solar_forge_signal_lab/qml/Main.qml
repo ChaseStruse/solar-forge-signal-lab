@@ -12,7 +12,7 @@ ApplicationWindow {
     title: "Solar Forge · Signal Lab"
     color: "#09131c"
     font.family: "DejaVu Sans"
-    property int contentMinimumHeight: width < 1100 ? 1020 : 850
+    property int contentMinimumHeight: width < 1100 ? 1070 : 900
     property bool motion: visibility !== Window.Minimized && studio.playing && !studio.reduced
 
     Connections {
@@ -150,6 +150,35 @@ ApplicationWindow {
                 Text { text: "MASTER"; color: "#87a7a6"; font.pixelSize: 9; font.letterSpacing: 1 }
                 ForgeSlider { Layout.preferredWidth: 125; value: studio.master; onMoved: studio.setMaster(value); Accessible.name: "Master volume" }
                 Text { text: Math.round(studio.master*100)+"%"; color: "#acd2c7"; font.pixelSize: 11; Layout.preferredWidth: 32 }
+            }
+        }
+        RowLayout {
+            Layout.fillWidth: true; spacing: 10
+            Text { text: "SLEEP TIMER"; color: "#87a7a6"; font.pixelSize: 9; font.letterSpacing: 1 }
+            Repeater {
+                model: [15, 30, 60]
+                ForgeButton {
+                    required property int modelData
+                    objectName: "sleep" + modelData + "Button"
+                    text: modelData + " min"; enabled: studio.playing
+                    onClicked: studio.startSleep(modelData)
+                    Accessible.name: "Sleep in " + modelData + " minutes"
+                }
+            }
+            Text {
+                objectName: "sleepCountdown"
+                text: studio.sleepActive
+                    ? (studio.sleepRemaining <= 30 ? "Fading out · " : "Pausing in ")
+                      + Math.floor(studio.sleepRemaining / 60) + ":"
+                      + (studio.sleepRemaining % 60).toString().padStart(2, "0")
+                    : "A gentle fade into quiet"
+                color: "#a5c4bc"; font.pixelSize: 11
+                Accessible.name: text
+            }
+            Item { Layout.fillWidth: true }
+            ForgeButton {
+                objectName: "cancelSleepButton"; text: "Cancel timer"
+                visible: studio.sleepActive; onClicked: studio.cancelSleep()
             }
         }
         RowLayout {

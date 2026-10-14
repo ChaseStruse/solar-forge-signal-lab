@@ -30,6 +30,12 @@ Playback starts paused. Press **Play**, or **Ctrl+Space**, to listen. Adjust eac
 layer and the master volume. ON/OFF mutes a layer without losing its level.
 Closing the window exits the app and stops sound; rerun the launcher to reopen it.
 
+While playing, choose a **15, 30, or 60 minute sleep timer**. Playback fades gently
+during the final 30 seconds, then pauses. Choose another duration to restart the
+countdown, or **Cancel timer** to keep listening. Pausing or losing the audio output
+cancels the timer. Your mix and saved volume stay unchanged; timers do not persist
+across app restarts.
+
 ```bash
 docker compose logs --tail=80 studio
 docker compose down
